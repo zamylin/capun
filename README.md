@@ -13,9 +13,9 @@ We expect you to have the following things setup before you run `cap staging|pro
 
 ### Getting started
 
-Deployer works with Rails 4.0 onwards. You can add it to your Gemfile with:
+Capun works with Rails 4.0 onwards. You can add it to your Gemfile with:
 
-<pre><code>gem 'devise', group: :development
+<pre><code>gem 'capun', group: :development
 \#add unicorn as well, as we use it as application server
 gem 'unicorn', group: :production
 </pre></code>
@@ -38,7 +38,7 @@ Now you are ready to make a deploy:
 <pre><code>cap beta deploy
 </pre></code>
 
-## Contributing
+### Contributing
 
 1. Fork it ( http://github.com/zamylin/capun/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
