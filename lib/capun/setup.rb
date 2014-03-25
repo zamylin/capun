@@ -18,6 +18,8 @@ set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 set :uploads, []
 set :std_uploads, [
   #basic_authenticatable.rb
+  {what: "config/application.yml", where: '#{shared_path}/config/application.yml'},
+  #basic_authenticatable.rb
   {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb'},
   #nginx.conf
   {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf'},
@@ -32,7 +34,8 @@ set :std_uploads, [
 set :symlinks, []
 set :std_symlinks, [
   {what: "nginx.conf", where: '/etc/nginx/sites-enabled/#{fetch(:application)}'},
-  {what: "database.yml", where: '#{release_path}/config/database.yml'}
+  {what: "database.yml", where: '#{release_path}/config/database.yml'},
+  {what: "application.yml", where: '#{release_path}/config/application.yml'}
 ]
 
 before 'deploy', 'rvm1:install:rvm'  # install/update RVM
