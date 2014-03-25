@@ -1,0 +1,14 @@
+require 'capun/setup'
+
+# name of the user at server who would own the project
+set :user, '<%= @user %>'
+# ip for the server where the project would be deployed
+server '<%= @server %>', user: fetch(:user), roles: %w{web app db}
+
+# path to the git repository
+set :repo_url, '<%= @repo %>'
+# set :branch, 'master'
+
+# set :rvm1_ruby_version, "ruby-2.0.0-p353"
+
+# set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets public/system}

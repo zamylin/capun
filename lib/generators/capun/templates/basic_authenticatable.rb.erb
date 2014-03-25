@@ -1,0 +1,11 @@
+module BasicAuthenticatable
+
+	extend ActiveSupport::Concern
+
+	included do
+		<%% if fetch(:use_basic_auth) %>
+			http_basic_authenticate_with name: "<%= @username %>", password: "<%= @password %>"
+		<%% end %>
+	end
+
+end
