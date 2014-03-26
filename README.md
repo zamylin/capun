@@ -4,7 +4,7 @@
 ###Prerequisites
 
 We expect you to have the following things setup before you run `cap staging|production|beta|etc deploy`:
-* linux server with a ssh user who would own a project (see the wiki page for instuctions on how to configure a user)
+* linux server with a ssh user who would own a project (see the wiki page for instructions on how to configure a user)
 * `nginx` installed in the `/etc/nginx` directory
 * dedicated host (e.g. `beta.example.com`)
 * `unicorn` gem added to a `Gemfile` 
