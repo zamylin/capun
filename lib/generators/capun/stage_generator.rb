@@ -39,7 +39,13 @@ module Capun
         end
       end
 
-
+      def add_secret
+        secret_token_does_not_exist = Thor::CoreExt::HashWithIndifferentAccess.new(::YAML::load_file("config/secrets.yml"))[singular_name].nil?
+        if secret_token_does_not_exist
+          append_to_file "config/secrets.yml", "\n#{singular_name}:\n  secret_key_base: #{SecureRandom.hex(64)}"
+        end
+      end
+ 
     end
   end
 end
