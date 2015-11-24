@@ -43,6 +43,14 @@ before 'deploy', 'rvm1:install:ruby' # install Ruby and create gemset
 
 namespace :deploy do
 
+  desc 'Kills running processes'
+  task :kill_me do
+    on roles(:app) do
+      execute "kill -9 $(ps aux | grep #{fetch(:application)} | grep -v grep | awk '{print $2}') || true"
+    end     
+  end
+  before :deploy, 'deploy:kill_me'
+
   desc 'Uploads files to app based on stage'
   task :upload do
     on roles(:app) do
