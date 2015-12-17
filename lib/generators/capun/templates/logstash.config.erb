@@ -1,0 +1,22 @@
+input {
+	file {
+		path => "/home/<%= fetch(:user) %>/apps/<%= fetch(:application) %>/shared/log/lograge_*"
+		type => "json"
+	}
+}
+filter{
+	json{
+		source => "message"
+	}
+	useragent {
+		source => "agent_string"
+	}
+	geoip {
+		source => "remote_ip"
+	}
+}
+output {
+	elasticsearch {
+		index => "<%= fetch(:application) %>"
+	}
+}

@@ -1,0 +1,11 @@
+
+	def append_info_to_payload(payload)
+		super
+		#adding ip-address for payload
+		payload[:ip] = request.headers['HTTP_X_REAL_IP'] || request.remote_ip
+		#adding agent string for payload
+		payload[:agentstring] = request.headers['HTTP_USER_AGENT'] || request.user_agent
+		#adding user
+		payload[:user] = current_user unless defined? (current_user) || current_user.nil? 
+	end
+	

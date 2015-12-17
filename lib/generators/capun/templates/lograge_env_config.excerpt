@@ -1,0 +1,26 @@
+	
+	#enable lograge for logging
+	config.lograge.enabled = true
+	
+	#keep orginal rails log as well
+	config.lograge.keep_original_rails_log = true
+	config.lograge.logger = ActiveSupport::Logger.new "#{Rails.root}/log/lograge_#{Rails.env}.log"
+	
+	#configure lograge options
+	config.lograge.custom_options = ->(event) {
+		opts = {
+			params: event.payload[:params],
+			time:  %Q('#{event.time}'),
+			remote_ip: event.payload[:ip],
+			agent_string: event.payload[:agentstring]
+		}
+		if event.payload[:exception]
+			app_trace = Array(event.payload[:stacktrace]).reject { |el| !el.include?('alfaexperience/app') }
+			app_trace.map! { |item| item.slice(item.index("app")..-1) }
+			opts[:stacktrace] = app_trace.join('\n')
+		end
+		opts
+	}
+
+	#use logstash output as log formatter
+	config.lograge.formatter = Lograge::Formatters::Logstash.new

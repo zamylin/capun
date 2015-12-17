@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'rails/generators/base'
 
 module Capun
@@ -14,6 +15,7 @@ module Capun
           @username = ask("Basic authentication username [ex.: mike]:")
           @password = ask("Basic authentication password [ex.: secret]:")
         end
+        @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
       end
 
       def add_stage
@@ -40,12 +42,37 @@ module Capun
       end
 
       def add_secret
-        secret_token_does_not_exist = Thor::CoreExt::HashWithIndifferentAccess.new(::YAML::load_file("config/secrets.yml"))[singular_name].nil?
-        if secret_token_does_not_exist
-          append_to_file "config/secrets.yml", "\n#{singular_name}:\n  secret_key_base: #{SecureRandom.hex(64)}"
+        if File.exists?("config/secrets.yml")
+          secret_token_does_not_exist = Thor::CoreExt::HashWithIndifferentAccess.new(::YAML::load_file("config/secrets.yml"))[singular_name].nil?
+          if secret_token_does_not_exist
+            append_to_file "config/secrets.yml", "\n#{singular_name}:\n  secret_key_base: #{SecureRandom.hex(64)}"
+          end
         end
       end
- 
+
+      def add_ELK
+
+        if @addELK
+          #coping logstash config
+          copy_file "logstash.config.erb", "config/deploy/logstash.config.erb"
+          #installing required gems
+          gem "lograge"
+          gem "logstash-event"
+          inside Rails.root do
+            run "bundle install --quiet"
+          end
+          #adding lograge configs to relevant environment initializer
+          inject_into_file "config/environments/#{singular_name}.rb", File.read(File.expand_path("../templates/lograge_env_config.excerpt", __FILE__)), :before => /^end/
+          #adding append_info_to_payload method override to pipe required information to lograge log
+          this_line = "class ApplicationController < ActionController::Base\n"
+          inject_into_file "app/controllers/application_controller.rb", File.read(File.expand_path("../templates/append_info.excerpt", __FILE__)), :after => this_line
+          #coping logstash config
+          copy_file "lograge_initializer.rb", "config/initializers/lograge_initializer.rb"
+          #adding flag to run 'service logstash restart' during deploy
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addELK, true"
+        end
+      end
+
     end
   end
 end

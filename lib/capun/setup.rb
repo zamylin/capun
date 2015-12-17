@@ -17,8 +17,10 @@ set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 
 set :uploads, []
 set :std_uploads, [
-  #basic_authenticatable.rb
+  #figaro
   {what: "config/application.yml", where: '#{shared_path}/config/application.yml'},
+  #logstash configs
+  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config'},
   #basic_authenticatable.rb
   {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb'},
   #nginx.conf
@@ -34,6 +36,7 @@ set :std_uploads, [
 set :symlinks, []
 set :std_symlinks, [
   {what: "nginx.conf", where: '/etc/nginx/sites-enabled/#{fetch(:application)}'},
+  {what: "logstash.config", where: '/etc/logstash/conf.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
   {what: "application.yml", where: '#{release_path}/config/application.yml'}
 ]
@@ -92,9 +95,18 @@ namespace :deploy do
   end
 
   desc 'Restart nginx'
-  task :restart do
+  task :restart_nginx do
     on roles(:app) do
       execute :sudo, "service nginx restart"
+    end
+  end
+
+  desc 'Restart logstash'
+  task :restart_logstash do
+    if fetch(:addELK)
+      on roles(:app) do
+        execute :sudo, "service logstash restart"
+      end
     end
   end
 
@@ -103,5 +115,6 @@ end
 before "deploy:updating", "deploy:make_dirs"
 after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
-after "deploy:publishing", "deploy:restart"
+after "deploy:publishing", "deploy:restart_nginx"
+after "deploy:publishing", "deploy:restart_logstash"
 after "deploy:publishing", "unicorn:restart"
