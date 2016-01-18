@@ -7,7 +7,7 @@ set :branch, 'master'
 set :deploy_via, :remote_cache
 # Capistrano would use local ssh keys to get access to git repo
 set :ssh_options, { :forward_agent => true }
-set :pty, true
+set :pty, false
 
 set :keep_releases, 2
 set :bundle_flags, "--quiet"
