@@ -1,0 +1,7 @@
+/home/<%= fetch(:user) %>/apps/<%= fetch(:application) %>/shared/log/*.log {
+  daily
+  missingok
+  copytruncate
+  rotate 52
+  dateext
+}
