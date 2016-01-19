@@ -5,18 +5,20 @@ input {
 	}
 }
 filter{
-    mutate {
-    	#square brackets should be removed, otherwise parse error will happen
-	    gsub => [ "message", "\[|\]", "" ]
-    }
-	json{
-		source => "message"
-	}
-	useragent {
-		source => "agent_string"
-	}
-	geoip {
-		source => "remote_ip"
+	if [type] == "<%= fetch(:application) %>" {
+		mutate {
+			#square brackets should be removed, otherwise parse error will happen
+			gsub => [ "message", "\[|\]", "" ]
+		}
+		json{
+			source => "message"
+		}
+		useragent {
+			source => "agent_string"
+		}
+		geoip {
+			source => "remote_ip"
+		}
 	}
 }
 output {
