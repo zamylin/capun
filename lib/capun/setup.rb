@@ -21,6 +21,8 @@ set :std_uploads, [
   {what: "config/application.yml", where: '#{shared_path}/config/application.yml'},
   #logstash configs
   {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config'},
+  #logrotate configs
+  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config'},
   #basic_authenticatable.rb
   {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb'},
   #nginx.conf
