@@ -16,6 +16,7 @@ server {
     gzip_static on;
     expires max;
     add_header Cache-Control public;
+    access_log /dev/null;
   }
 
   location @unicorn_<%= fetch(:application) %> {
