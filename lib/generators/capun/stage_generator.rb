@@ -16,7 +16,7 @@ module Capun
           @password = ask("Basic authentication password [ex.: secret]:")
         end
         @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
-        @addlograge = ask("Would you like to add lograge configuration to stage? [Y/n]").capitalize == 'Y'
+        @addlogrotate = ask("Would you like to add logrotate configuration to stage? [Y/n]").capitalize == 'Y'
       end
 
       def add_stage
@@ -74,9 +74,9 @@ module Capun
         end
       end
 
-      def add_lograge
-        if @addlograge
-          copy_file "lograge.config.erb", "config/deploy/lograge.config.erb"
+      def add_logrotate
+        if @addlogrotate
+          copy_file "logrotate.config.erb", "config/deploy/logrotate.config.erb"
         end
       end
 
