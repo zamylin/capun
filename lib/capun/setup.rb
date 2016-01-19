@@ -37,7 +37,7 @@ set :symlinks, []
 set :std_symlinks, [
   {what: "nginx.conf", where: '/etc/nginx/sites-enabled/#{fetch(:application)}'},
   {what: "logstash.config", where: '/etc/logstash/conf.d/#{fetch(:application)}'},
-  {what: "lograge.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
+  {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
   {what: "application.yml", where: '#{release_path}/config/application.yml'}
 ]
