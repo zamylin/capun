@@ -4,7 +4,7 @@ upstream unicorn_<%= fetch(:application) %> {
 
 server {
   server_name <%= fetch(:url) %> www.<%= fetch(:url) %>;
-  listen 91.228.154.188;
+  listen <%= server.hostname %>;
 
   location / {
     root /home/<%= fetch(:user) %>/apps/<%= fetch(:application) %>/current/public;
@@ -16,7 +16,14 @@ server {
     gzip_static on;
     expires max;
     add_header Cache-Control public;
-    access_log /dev/null;
+    access_log off;
+  }
+
+  location /status {
+    stub_status on;
+    access_log off;
+    allow <%= server.hostname %>;
+    deny all;
   }
 
   location @unicorn_<%= fetch(:application) %> {

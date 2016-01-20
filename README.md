@@ -4,7 +4,8 @@
 ###Prerequisites
 
 We expect you to have the following things setup before you run `cap staging|production|beta|etc deploy`:
-* linux server with a ssh user who would own a project (see the wiki page for instructions on how to configure a user)
+* linux server with a ssh user (should be configured as passwordless sudo, [see this serverfault.com article for instructions](http://serverfault.com/questions/160581/how-to-setup-passwordless-sudo-on-linux))
+* Node.js installed (e.g. `sudo apt-get install -y nodejs && sudo ln -sf /usr/bin/nodejs /usr/local/bin/node` for Debian 8 Jessie)
 * `nginx` installed in the `/etc/nginx` directory
 * dedicated host (e.g. `beta.example.com`)
 * `unicorn` gem added to a `Gemfile` 
@@ -62,6 +63,11 @@ If you upload file with `.erb` extension, it will be precompiled before upload.
 **Figaro support**
 
 If you use [figaro](https://github.com/laserlemon/figaro) gem, `Capun` will pick up `application.yml` file, upload it to `#{shared_path}/config/application.yml` and symlink to `#{release_path}/config/application.yml`. No configuration is required.
+
+**ELK + logrotate support**
+
+If you would like to forward your logs to `logstash`, you can enable it by answering 'yes' while generating a new stage. As a result, `lograge` gem and `lograge` configurations will be added along with `logstash` confgurations added and symlinked to `logstash` `conf.d` directory (which is assumed to be at `/etc/logstash/conf.d/`).
+If you answer 'yes' to 'Would you like to add logrotate configuration to stage?' while generating a new stage, `logrotate` configuration file will be added and symlinked to `/etc/logrotate.d/` directory.
 
 ### Contributing
 

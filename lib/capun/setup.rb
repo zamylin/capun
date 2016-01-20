@@ -59,7 +59,7 @@ namespace :deploy do
 
   desc 'Uploads files to app based on stage'
   task :upload do
-    on roles(:app) do
+    on roles(:app) do |server|
       #create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
       execute :mkdir, "-p", "#{shared_path}/config"
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
