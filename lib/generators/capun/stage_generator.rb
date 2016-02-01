@@ -77,6 +77,7 @@ module Capun
       def add_logrotate
         if @addlogrotate
           copy_file "logrotate.config.erb", "config/deploy/logrotate.config.erb"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addlogrotate, true"
         end
       end
 

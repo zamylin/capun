@@ -97,6 +97,16 @@ namespace :deploy do
     end
   end
 
+  desc 'Prepare logrotate'
+  task :prepare_logrotate do
+    if fetch(:addlogrotate)
+      on roles(:app) do
+        execute :sudo, :chown, "root:root", "#{shared_path}/config/logrotate.config"
+        execute :sudo, :chmod, "644", "#{shared_path}/config/logrotate.config"
+      end
+    end
+  end
+
   desc 'Restart nginx'
   task :restart_nginx do
     on roles(:app) do
@@ -118,6 +128,7 @@ end
 before "deploy:updating", "deploy:make_dirs"
 after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
+after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
 after "deploy:publishing", "unicorn:restart"
