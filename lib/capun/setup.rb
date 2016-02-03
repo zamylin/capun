@@ -59,24 +59,6 @@ namespace :deploy do
   end
   before :deploy, 'deploy:kill_me'
 
-  desc 'Setting up Jenkins'
-  task :set_up_jenkins do
-    if fetch(:addJenkins)
-      on roles(:app) do
-        unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
-          info "Creating Jenkins directory"
-          execute :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          execute :sudo, "service jenkins restart"
-        end
-      end
-    end
-  end
-
   desc 'Uploads files to app based on stage'
   task :upload do
     on roles(:app) do |server|
@@ -117,6 +99,24 @@ namespace :deploy do
     end
   end
 
+  desc 'Setting up Jenkins'
+  task :set_up_jenkins do
+    if fetch(:addJenkins)
+      on roles(:app) do
+        unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+          info "Creating Jenkins directory"
+          execute :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, "service jenkins restart"
+        end
+      end
+    end
+  end
+
   desc 'Prepare logrotate'
   task :prepare_logrotate do
     if fetch(:addlogrotate)
@@ -146,9 +146,9 @@ namespace :deploy do
 end
 
 before "deploy:updating", "deploy:make_dirs"
-before "deploy:updating", "deploy:set_up_jenkins"
 after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
+after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
