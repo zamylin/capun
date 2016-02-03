@@ -59,6 +59,24 @@ namespace :deploy do
   end
   before :deploy, 'deploy:kill_me'
 
+  desc 'Setting up Jenkins'
+  task :set_up_jenkins do
+    if fetch(:addJenkins)
+      on roles(:app) do
+        unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+          info "Creating Jenkins directory"
+          execute :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, "service jenkins restart"
+        end
+      end
+    end
+  end
+
   desc 'Uploads files to app based on stage'
   task :upload do
     on roles(:app) do |server|
@@ -121,23 +139,6 @@ namespace :deploy do
     if fetch(:addELK)
       on roles(:app) do
         execute :sudo, "service logstash restart"
-      end
-    end
-  end
-
-  desc 'Setting up Jenkins'
-  task :set_up_jenkins do
-    if fetch(:addJenkins)
-      on roles(:app) do
-        unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
-          execute :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          execute :sudo, "service jenkins restart"
-        end
       end
     end
   end
