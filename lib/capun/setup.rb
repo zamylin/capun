@@ -145,10 +145,10 @@ namespace :deploy do
 end
 
 before "deploy:updating", "deploy:make_dirs"
+before "deploy:updating", "deploy:set_up_jenkins"
 after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
 after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
-after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "unicorn:restart"
