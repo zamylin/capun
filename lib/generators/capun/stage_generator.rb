@@ -15,6 +15,7 @@ module Capun
           @username = ask("Basic authentication username [ex.: mike]:")
           @password = ask("Basic authentication password [ex.: secret]:")
         end
+        @addJenkins = ask("Would you like to add Jenkins configuration file? [Y/n]").capitalize == 'Y'
         @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
         @addlogrotate = ask("Would you like to add logrotate configuration to stage? [Y/n]").capitalize == 'Y'
       end
@@ -52,7 +53,6 @@ module Capun
       end
 
       def add_ELK
-
         if @addELK
           #coping logstash config
           copy_file "logstash.config.erb", "config/deploy/logstash.config.erb"
@@ -81,6 +81,12 @@ module Capun
         end
       end
 
+      def add_jenkins
+        if @addJenkins
+          copy_file "jenkins.config.xml.erb", "config/deploy/jenkins.config.xml.erb"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addJenkins, true"
+        end
+      end
     end
   end
 end

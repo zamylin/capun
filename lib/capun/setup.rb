@@ -33,6 +33,8 @@ set :std_uploads, [
   {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb'},
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'}
+  #jenkins
+  # {what: "config/deploy/jenkins.config.xml.erb", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
 ]
 
 set :symlinks, []
@@ -119,6 +121,22 @@ namespace :deploy do
     if fetch(:addELK)
       on roles(:app) do
         execute :sudo, "service logstash restart"
+      end
+    end
+  end
+
+  desc 'Setting up Jenkins'
+  task :set_up_jenkins do
+    if fetch(:addJenkins)
+      on roles(:app) do
+        unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, "service jenkins restart"
+        end
       end
     end
   end
