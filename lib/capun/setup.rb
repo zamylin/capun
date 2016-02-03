@@ -130,8 +130,8 @@ namespace :deploy do
     if fetch(:addJenkins)
       on roles(:app) do
         unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
-          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
