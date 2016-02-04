@@ -1,4 +1,4 @@
-
+require 'digest'
 set :deploy_to, -> {"/home/#{fetch(:user)}/apps/#{fetch(:application)}"}
 set :rvm1_ruby_version, "2.0.0"
 set :branch, 'master'

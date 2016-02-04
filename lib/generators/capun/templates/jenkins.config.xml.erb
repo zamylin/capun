@@ -45,7 +45,7 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <authToken>token_goes_here</authToken>
+  <authToken><%= Digest::SHA1.hexdigest( fetch(:application) + Time.now.to_f.to_s) ) %></authToken>
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
