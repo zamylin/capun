@@ -33,8 +33,6 @@ set :std_uploads, [
   {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb'},
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'}
-  #jenkins
-  # {what: "config/deploy/jenkins.config.xml.erb", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
 ]
 
 set :symlinks, []
@@ -64,6 +62,7 @@ namespace :deploy do
     on roles(:app) do |server|
       #create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
       execute :mkdir, "-p", "#{shared_path}/config"
+      execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", '#{shared_path}/config/*'
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
