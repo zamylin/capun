@@ -107,9 +107,10 @@ namespace :deploy do
         unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
           info "Creating Jenkins directory"
           execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, "service jenkins restart"
