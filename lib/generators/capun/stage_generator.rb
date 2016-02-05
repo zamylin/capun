@@ -18,7 +18,7 @@ module Capun
         @addJenkins = ask("Would you like to add Jenkins configuration file? [Y/n]").capitalize == 'Y'
         @addNewRelic = ask("Would you like to add New Relic configuration file? [Y/n]").capitalize == 'Y'
         if @addNewRelic
-          @newRelicKey = ask("New relic key:").capitalize == 'Y'
+          @newRelicKey = ask("New relic key:")
         end
         @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
         @addlogrotate = ask("Would you like to add logrotate configuration to stage? [Y/n]").capitalize == 'Y'
@@ -99,7 +99,7 @@ module Capun
       def add_newrelic
         if @addNewRelic
           copy_file "newrelic.yml.erb", "config/deploy/newrelic.yml.erb"
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :@newRelicKey, #{@newRelicKey} "
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :newRelicKey, #{@newRelicKey}"
         end
       end
     end
