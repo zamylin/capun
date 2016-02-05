@@ -81,10 +81,6 @@ module Capun
       def add_logrotate
         if @addlogrotate
           copy_file "logrotate.config.erb", "config/deploy/logrotate.config.erb"
-          gem "newrelic_rpm"
-          inside Rails.root do
-            run "bundle install --quiet"
-          end
           append_to_file "config/deploy/#{singular_name}.rb", "\nset :addlogrotate, true"
         end
       end
@@ -99,6 +95,10 @@ module Capun
       def add_newrelic
         if @addNewRelic
           copy_file "newrelic.yml.erb", "config/deploy/newrelic.yml.erb"
+          gem "newrelic_rpm"
+          inside Rails.root do
+            run "bundle install --quiet"
+          end
           append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :newRelicKey, #{@newRelicKey}"
         end
       end
