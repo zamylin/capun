@@ -33,6 +33,8 @@ set :std_uploads, [
   {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb'},
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'}
+  #newrelic.yml
+  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.rb'}
 ]
 
 set :symlinks, []
@@ -112,6 +114,14 @@ namespace :deploy do
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, "service jenkins restart"
         end
+      end
+    end
+  end
+
+  desc 'Setting up New Relic'
+  task :set_up_jenkins do
+    if fetch(:addJenkins)
+      on roles(:app) do
       end
     end
   end

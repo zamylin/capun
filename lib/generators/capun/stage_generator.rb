@@ -16,6 +16,10 @@ module Capun
           @password = ask("Basic authentication password [ex.: secret]:")
         end
         @addJenkins = ask("Would you like to add Jenkins configuration file? [Y/n]").capitalize == 'Y'
+        @addNewRelic = ask("Would you like to add New Relic configuration file? [Y/n]").capitalize == 'Y'
+        if @addNewRelic
+          @newRelicKey = ask("New relic key:").capitalize == 'Y'
+        end
         @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
         @addlogrotate = ask("Would you like to add logrotate configuration to stage? [Y/n]").capitalize == 'Y'
       end
@@ -77,6 +81,10 @@ module Capun
       def add_logrotate
         if @addlogrotate
           copy_file "logrotate.config.erb", "config/deploy/logrotate.config.erb"
+          gem "newrelic_rpm"
+          inside Rails.root do
+            run "bundle install --quiet"
+          end
           append_to_file "config/deploy/#{singular_name}.rb", "\nset :addlogrotate, true"
         end
       end
@@ -85,6 +93,13 @@ module Capun
         if @addJenkins
           copy_file "jenkins.config.xml.erb", "config/deploy/jenkins.config.xml.erb"
           append_to_file "config/deploy/#{singular_name}.rb", "\nset :addJenkins, true"
+        end
+      end
+
+      def add_newrelic
+        if @addNewRelic
+          copy_file "newrelic.yml.erb", "config/deploy/newrelic.yml.erb"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :newRelicKey, #{@newRelicKey} "
         end
       end
     end
