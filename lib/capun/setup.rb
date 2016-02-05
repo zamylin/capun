@@ -34,7 +34,7 @@ set :std_uploads, [
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.rb'}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml'}
 ]
 
 set :symlinks, []
@@ -109,9 +109,9 @@ namespace :deploy do
           execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, "service jenkins restart"
         end
