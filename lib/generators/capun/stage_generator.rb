@@ -99,7 +99,7 @@ module Capun
       def add_newrelic
         if @addNewRelic
           copy_file "newrelic.yml.erb", "config/deploy/newrelic.yml.erb"
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :newRelicKey, #{@newRelicKey} "
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :@newRelicKey, #{@newRelicKey} "
         end
       end
     end
