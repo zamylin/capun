@@ -99,7 +99,7 @@ module Capun
           inside Rails.root do
             run "bundle install --quiet"
           end
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :newRelicKey, #{@newRelicKey}"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNewRelic, true\nset :newRelicKey, \"#{@newRelicKey}\""
         end
       end
     end
