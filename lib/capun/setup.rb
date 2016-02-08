@@ -112,9 +112,9 @@ namespace :deploy do
     if fetch(:addJenkins)
       on roles(:app) do
         if test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
-          execute :sudo, :chown, "jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          execute :sudo, :chown, "jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, "service jenkins restart"
         end
