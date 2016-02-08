@@ -61,7 +61,7 @@ bundle install
 mkdir features/reports
 mkdir spec/reports
 mkdir ./../htmlreports
-bundle exec cap <%= fetch(:stage) %> deploy</command>
+bundle exec cap <%= fetch(:stage) %> deploy
 
 bundle exec rake db:create:all
 bundle exec rake db:migrate
@@ -70,6 +70,7 @@ bundle exec rake ci:setup:rspec spec RAILS_ENV=test
 bundle exec rake ci:setup:cucumber features RAILS_ENV=test
 bundle exec cucumber features --format html --out features/reports/report.html
 bundle exec rspec --format html > spec/reports/report.html
+      </command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
