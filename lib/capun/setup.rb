@@ -45,7 +45,7 @@ set :std_symlinks, [
   {what: "logstash.config", where: '/etc/logstash/conf.d/#{fetch(:application)}'},
   {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
-  {what: "application.yml", where: '#{release_path}/config/application.yml'}
+  {what: "application.yml", where: '#{release_path}/config/application.yml'},
   {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
 ]
 
