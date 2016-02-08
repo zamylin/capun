@@ -1,4 +1,4 @@
-
+require 'digest'
 set :deploy_to, -> {"/home/#{fetch(:user)}/apps/#{fetch(:application)}"}
 set :rvm1_ruby_version, "2.0.0"
 set :branch, 'master'
@@ -18,21 +18,25 @@ set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 set :uploads, []
 set :std_uploads, [
   #figaro
-  {what: "config/application.yml", where: '#{shared_path}/config/application.yml'},
+  {what: "config/application.yml", where: '#{shared_path}/config/application.yml', overwrite: true},
   #logstash configs
-  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config'},
+  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', overwrite: true},
   #logrotate configs
-  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config'},
+  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', overwrite: true},
   #basic_authenticatable.rb
-  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb'},
+  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', overwrite: true},
   #nginx.conf
-  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf'},
+  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', overwrite: true},
   #unicorn.config.rb
-  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb'},
+  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', overwrite: true},
   #secret_token.rb
-  {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb'},
+  {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb', overwrite: true},
   #database.yml
-  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'}
+  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', overwrite: true},
+  #jenkins' config.xml
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: false},
+  #newrelic.yml
+  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml', overwrite: true}
 ]
 
 set :symlinks, []
@@ -41,7 +45,8 @@ set :std_symlinks, [
   {what: "logstash.config", where: '/etc/logstash/conf.d/#{fetch(:application)}'},
   {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
-  {what: "application.yml", where: '#{release_path}/config/application.yml'}
+  {what: "application.yml", where: '#{release_path}/config/application.yml'},
+  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
 ]
 
 before 'deploy', 'rvm1:install:rvm'  # install/update RVM
@@ -62,11 +67,13 @@ namespace :deploy do
     on roles(:app) do |server|
       #create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
       execute :mkdir, "-p", "#{shared_path}/config"
+      execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "#{shared_path}/config/*"
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
         next if !File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
+        next if !file_hash[:overwrite] && test("[ -f #{where} ]")
         #compile temlate if it ends with .erb before upload
         upload! (what.end_with?(".erb") ? StringIO.new(ERB.new(File.read(what)).result(binding)) : what), where
         info "copying: #{what} to: #{where}"
@@ -94,6 +101,25 @@ namespace :deploy do
   task :make_dirs do
     on roles(:app) do
       execute :mkdir, "-p", "/home/#{fetch(:user)}/apps/#{fetch(:application)}"
+      if fetch(:addJenkins)
+        execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+        execute :sudo, :chown, "#{fetch(:user)}", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+      end
+    end
+  end
+
+  desc 'Setting up Jenkins'
+  task :set_up_jenkins do
+    if fetch(:addJenkins)
+      on roles(:app) do
+        if test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, "service jenkins restart"
+        end
+      end
     end
   end
 
@@ -128,6 +154,7 @@ end
 before "deploy:updating", "deploy:make_dirs"
 after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
+after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
