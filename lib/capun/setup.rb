@@ -72,8 +72,8 @@ namespace :deploy do
       uploads.each do |file_hash|
         what = file_hash[:what]
         next if !File.exists?(what)
-        next if !file_hash[:overwrite] && test("[ -f #{file_hash[:where]} ]")
         where = eval "\"" + file_hash[:where] + "\""
+        next if !file_hash[:overwrite] && test("[ -f #{where} ]")
         #compile temlate if it ends with .erb before upload
         upload! (what.end_with?(".erb") ? StringIO.new(ERB.new(File.read(what)).result(binding)) : what), where
         info "copying: #{what} to: #{where}"
