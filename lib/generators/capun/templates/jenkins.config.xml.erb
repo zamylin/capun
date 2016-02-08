@@ -45,7 +45,7 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <authToken><%= Digest::SHA1.hexdigest(fetch(:application) + Time.now.to_f.to_s) %></authToken>
+  <authToken><%= Digest::MD5.hexdigest(fetch(:application) + Time.now.to_f.to_s) %></authToken>
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
@@ -55,10 +55,21 @@ source ~/.bash_profile
 rvm use <%= fetch(:rvm1_ruby_version) %>
 ln -s ../../common/application.yml config/application.yml
 ln -s ../../../common/secret_token.rb config/initializers/secret_token.rb
+
 bundle install
+
 mkdir features/reports
+mkdir spec/reports
 mkdir ./../htmlreports
 bundle exec cap <%= fetch(:stage) %> deploy</command>
+
+bundle exec rake db:create:all
+bundle exec rake db:migrate
+bundle exec rake db:test:prepare
+bundle exec rake ci:setup:rspec spec RAILS_ENV=test
+bundle exec rake ci:setup:cucumber features RAILS_ENV=test
+bundle exec cucumber features --format html --out features/reports/report.html
+bundle exec rspec --format html > spec/reports/report.html
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

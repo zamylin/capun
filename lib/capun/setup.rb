@@ -32,7 +32,11 @@ set :std_uploads, [
   #secret_token.rb
   {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb'},
   #database.yml
-  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'}
+  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'},
+  #jenkins' config.xml
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml'},
+  #newrelic.yml
+  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml'}
 ]
 
 set :symlinks, []
@@ -42,6 +46,7 @@ set :std_symlinks, [
   {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
   {what: "application.yml", where: '#{release_path}/config/application.yml'}
+  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
 ]
 
 before 'deploy', 'rvm1:install:rvm'  # install/update RVM
@@ -103,13 +108,14 @@ namespace :deploy do
     if fetch(:addJenkins)
       on roles(:app) do
         unless test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
-          info "Creating Jenkins directory"
-          execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
-          upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, :chown, "jenkins:nogroup", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          # info "Creating Jenkins directory"
+          # execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          # execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          # upload! StringIO.new(ERB.new(File.read("config/deploy/jenkins.config.xml.erb")).result(binding)), "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
+          execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
+          execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, "service jenkins restart"
         end
       end
