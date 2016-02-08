@@ -1,3 +1,3 @@
 module Capun
-  VERSION = "0.0.20.b"
+  VERSION = "0.0.20.с"
 end

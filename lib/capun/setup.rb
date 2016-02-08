@@ -18,25 +18,25 @@ set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 set :uploads, []
 set :std_uploads, [
   #figaro
-  {what: "config/application.yml", where: '#{shared_path}/config/application.yml'},
+  {what: "config/application.yml", where: '#{shared_path}/config/application.yml', overwrite: true},
   #logstash configs
-  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config'},
+  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', overwrite: true},
   #logrotate configs
-  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config'},
+  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', overwrite: true},
   #basic_authenticatable.rb
-  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb'},
+  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', overwrite: true},
   #nginx.conf
-  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf'},
+  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', overwrite: true},
   #unicorn.config.rb
-  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb'},
+  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', overwrite: true},
   #secret_token.rb
-  {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb'},
+  {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb', overwrite: true},
   #database.yml
-  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml'},
+  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', overwrite: true},
   #jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml'},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: false},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml'}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml', overwrite: true}
 ]
 
 set :symlinks, []
@@ -72,6 +72,7 @@ namespace :deploy do
       uploads.each do |file_hash|
         what = file_hash[:what]
         next if !File.exists?(what)
+        next if !file_hash[:overwrite] && File.exists?(where)
         where = eval "\"" + file_hash[:where] + "\""
         #compile temlate if it ends with .erb before upload
         upload! (what.end_with?(".erb") ? StringIO.new(ERB.new(File.read(what)).result(binding)) : what), where
