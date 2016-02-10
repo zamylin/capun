@@ -39,6 +39,6 @@ test:
   # It doesn't make sense to report to New Relic from automated test runs.
   monitor_mode: false
 
-production:
+<%= fetch(:stage) %>:
   <<: *default_settings
   app_name: <%= fetch(:application) %> (Production)

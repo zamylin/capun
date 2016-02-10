@@ -67,7 +67,7 @@ namespace :deploy do
     on roles(:app) do |server|
       #create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
       execute :mkdir, "-p", "#{shared_path}/config"
-      execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "#{shared_path}/config/*"
+      execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "#{shared_path}/config/."
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
