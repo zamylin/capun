@@ -12,7 +12,7 @@ set :pty, false
 set :keep_releases, 2
 set :bundle_flags, "--quiet"
 
-set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets public/system}
+set :linked_dirs, %w{log tmp/pids tmp/cache tmp/sockets public/system}
 set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 
 set :uploads, []
@@ -67,7 +67,7 @@ namespace :deploy do
     on roles(:app) do |server|
       #create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
       execute :mkdir, "-p", "#{shared_path}/config"
-      execute :sudo, :chown, "#{fetch(:user)}:#{fetch(:user)}", "#{shared_path}/config/*"
+      execute :sudo, :chown, "-R", "#{fetch(:user)}:#{fetch(:user)}", "#{shared_path}/config/."
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
