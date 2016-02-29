@@ -34,7 +34,7 @@ set :std_uploads, [
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', overwrite: true},
   #jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: false},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: true},
   #newrelic.yml
   {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml', overwrite: true}
 ]
