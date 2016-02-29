@@ -123,7 +123,7 @@ namespace :deploy do
   task :set_up_jenkins do
     if fetch(:addJenkins)
       on roles(:app) do
-        if fetch(:jenkins_project_exists) && test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+        if !fetch(:jenkins_project_exists) && test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
           execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
