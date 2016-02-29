@@ -16,6 +16,9 @@ module Capun
           @password = ask("Basic authentication password [ex.: secret]:")
         end
         @addJenkins = ask("Would you like to add Jenkins configuration file? [Y/n]").capitalize == 'Y'
+        if @addJenkins
+            @jenkinsToken = ask("New Jenkins token key:")
+        end
         @addNewRelic = ask("Would you like to add New Relic configuration file? [Y/n]").capitalize == 'Y'
         if @addNewRelic
           @newRelicKey = ask("New relic key:")
@@ -88,7 +91,7 @@ module Capun
       def add_jenkins
         if @addJenkins
           copy_file "jenkins.config.xml.erb", "config/deploy/jenkins.config.xml.erb"
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addJenkins, true"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addJenkins, true\nset :jenkinsToken, \"#{@jenkinsToken}\""
         end
       end
 

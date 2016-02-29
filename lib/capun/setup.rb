@@ -108,6 +108,17 @@ namespace :deploy do
     end
   end
 
+  desc "Checking if Jenkins configuration file"
+  task :check_jenkins_project_existence do
+    on roles(:app) do
+      if fetch(:addJenkins) && test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+        set :jenkins_project_exists, true
+      else
+        set :jenkins_project_exists, false
+      end
+    end
+  end
+
   desc 'Setting up Jenkins'
   task :set_up_jenkins do
     if fetch(:addJenkins)
@@ -117,7 +128,7 @@ namespace :deploy do
           execute :sudo, :chmod, "755", "/var/lib/jenkins/jobs/#{fetch(:application)}"
           execute :sudo, :chown, "jenkins:jenkins", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
           execute :sudo, :chmod, "644", "/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml"
-          execute :sudo, "service jenkins restart"
+          execute :sudo, "service jenkins restart" unless fetch(:jenkins_project_exists)
         end
       end
     end
@@ -152,6 +163,7 @@ namespace :deploy do
 end
 
 before "deploy:updating", "deploy:make_dirs"
+before "deploy:updating", "deploy:check_jenkins_project_existence"
 after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
 after "deploy:publishing", "deploy:set_up_jenkins"
