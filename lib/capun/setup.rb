@@ -110,10 +110,12 @@ namespace :deploy do
 
   desc "Checking if Jenkins configuration file"
   task :check_jenkins_project_existence do
-    if fetch(:addJenkins) && test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
-      set :jenkins_project_exists, true
-    else
-      set :jenkins_project_exists, false
+    on roles(:app) do
+      if fetch(:addJenkins) && test("[ -f /var/lib/jenkins/jobs/#{fetch(:application)}/config.xml ]")
+        set :jenkins_project_exists, true
+      else
+        set :jenkins_project_exists, false
+      end
     end
   end
 
