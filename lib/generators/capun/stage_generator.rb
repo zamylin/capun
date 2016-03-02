@@ -51,7 +51,7 @@ module Capun
       def add_nginx
         if @addNginx
           copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addnginx, true"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNginx, true"
         end
       end
 
