@@ -54,7 +54,6 @@
 source ~/.bash_profile
 rvm use <%= fetch(:rvm1_ruby_version) %>
 ln -s ../../common/application.yml config/application.yml
-ln -s ../../../common/secret_token.rb config/initializers/secret_token.rb
 
 bundle install
 

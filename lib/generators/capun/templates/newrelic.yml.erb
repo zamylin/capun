@@ -28,7 +28,7 @@ common: &default_settings
 # If your application has other named environments, configure them here.
 development:
   <<: *default_settings
-  app_name: <%= fetch(:application) %> (Development)
+  app_name: <%= fetch(:application) %>
 
   # NOTE: There is substantial overhead when running in developer mode.
   # Do not use for production or load testing.
@@ -41,4 +41,4 @@ test:
 
 <%= fetch(:stage) %>:
   <<: *default_settings
-  app_name: <%= fetch(:application) %> (Production)
+  app_name: <%= fetch(:application) %>

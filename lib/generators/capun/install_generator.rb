@@ -22,9 +22,7 @@ module Capun
       end
 
       def add_to_gitignore
-        gsub_file ".gitignore", "\nconfig/initializers/secret_token.rb", '' if File.exists?("./.gitignore")
         gsub_file ".gitignore", "\nconfig/deploy/database.yml.erb", '' if File.exists?("./.gitignore")
-        append_to_file ".gitignore", "\nconfig/initializers/secret_token.rb" if File.exists?("./.gitignore")
         append_to_file ".gitignore", "\nconfig/deploy/database.yml.erb" if File.exists?("./.gitignore")
       end
 

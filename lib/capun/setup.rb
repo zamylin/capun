@@ -1,6 +1,6 @@
 require 'digest'
 set :deploy_to, -> {"/home/#{fetch(:user)}/apps/#{fetch(:application)}"}
-set :rvm1_ruby_version, "2.0.0"
+set :rvm1_ruby_version, "ruby-2.3.0"
 set :branch, 'master'
 # Remote caching will keep a local git repository on the server you're deploying to
 # and simply run a fetch from that rather than an entire clone
@@ -29,8 +29,6 @@ set :std_uploads, [
   {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', overwrite: true},
   #unicorn.config.rb
   {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', overwrite: true},
-  #secret_token.rb
-  {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb', overwrite: true},
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', overwrite: true},
   #jenkins' config.xml
