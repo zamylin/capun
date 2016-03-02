@@ -18,23 +18,23 @@ set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 set :uploads, []
 set :std_uploads, [
   #figaro
-  {what: "config/application.yml", where: '#{shared_path}/config/application.yml', overwrite: true},
+  {what: "config/application.yml", where: '#{shared_path}/config/application.yml', upload: true, overwrite: true},
   #logstash configs
-  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', overwrite: true},
+  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', upload: !!fetch(:addELK), overwrite: true},
   #logrotate configs
-  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', overwrite: true},
+  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', upload: !!fetch(:addlogrotate), overwrite: true},
   #basic_authenticatable.rb
-  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', overwrite: true},
+  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', upload: !!fetch(:use_basic_auth), overwrite: true},
   #nginx.conf
-  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', overwrite: true},
+  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: !!fetch(:addnginx), overwrite: true},
   #unicorn.config.rb
-  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', overwrite: true},
+  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', upload: true, overwrite: true},
   #database.yml
-  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', overwrite: true},
+  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
   #jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: false},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: !!fetch(:addJenkins), overwrite: false},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', overwrite: true}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: !!fetch(:addNewRelic), overwrite: true}
 ]
 
 set :symlinks, []
@@ -70,7 +70,7 @@ namespace :deploy do
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
-        next if !File.exists?(what)
+        next unless file_hash[:upload] && File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
         next if !file_hash[:overwrite] && test("[ -f #{where} ]")
         #compile temlate if it ends with .erb before upload
@@ -171,4 +171,4 @@ after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
-after "deploy:publishing", "unicorn:restart"
+after "deploy:publishing", "unicorn:legacy_restart"
