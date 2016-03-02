@@ -34,7 +34,7 @@ set :std_uploads, [
   #jenkins' config.xml
   {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: fetch(:addJenkins), overwrite: false},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: fetch(:addNewRelic), overwrite: true}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: true, overwrite: true}
 ]
 
 set :symlinks, []
