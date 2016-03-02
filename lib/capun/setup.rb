@@ -70,7 +70,8 @@ namespace :deploy do
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
-        next unless file_hash[:upload] && File.exists?(what)
+        next if !file_hash[:upload] || ( file_hash[:upload].is_a?(Proc) && !file_hash[:upload].call )
+        next unless File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
         next if !file_hash[:overwrite] && test("[ -f #{where} ]")
         #compile temlate if it ends with .erb before upload
