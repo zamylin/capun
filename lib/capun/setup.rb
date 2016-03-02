@@ -34,7 +34,7 @@ set :std_uploads, [
   #jenkins' config.xml
   {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: false},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml', overwrite: true}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', overwrite: true}
 ]
 
 set :symlinks, []
@@ -44,7 +44,8 @@ set :std_symlinks, [
   {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
   {what: "application.yml", where: '#{release_path}/config/application.yml'},
-  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
+  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'},
+  {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml'}
 ]
 
 before 'deploy', 'rvm1:install:rvm'  # install/update RVM
