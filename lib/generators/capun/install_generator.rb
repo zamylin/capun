@@ -16,15 +16,12 @@ module Capun
       def copy_files
         empty_directory "config/deploy"
         copy_file "database.yml.erb", "config/deploy/database.yml.erb"
-        copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"
         copy_file "unicorn.config.rb.erb", "config/deploy/unicorn.config.rb.erb"
         copy_file "Capfile", "Capfile"
       end
 
       def add_to_gitignore
-        gsub_file ".gitignore", "\nconfig/initializers/secret_token.rb", '' if File.exists?("./.gitignore")
         gsub_file ".gitignore", "\nconfig/deploy/database.yml.erb", '' if File.exists?("./.gitignore")
-        append_to_file ".gitignore", "\nconfig/initializers/secret_token.rb" if File.exists?("./.gitignore")
         append_to_file ".gitignore", "\nconfig/deploy/database.yml.erb" if File.exists?("./.gitignore")
       end
 

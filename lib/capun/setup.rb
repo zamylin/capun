@@ -1,6 +1,6 @@
 require 'digest'
 set :deploy_to, -> {"/home/#{fetch(:user)}/apps/#{fetch(:application)}"}
-set :rvm1_ruby_version, "2.0.0"
+set :rvm1_ruby_version, "ruby-2.3.0"
 set :branch, 'master'
 # Remote caching will keep a local git repository on the server you're deploying to
 # and simply run a fetch from that rather than an entire clone
@@ -18,25 +18,23 @@ set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 set :uploads, []
 set :std_uploads, [
   #figaro
-  {what: "config/application.yml", where: '#{shared_path}/config/application.yml', overwrite: true},
+  {what: "config/application.yml", where: '#{shared_path}/config/application.yml', upload: true, overwrite: true},
   #logstash configs
-  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', overwrite: true},
+  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', upload: -> { !!fetch(:addELK) }, overwrite: true},
   #logrotate configs
-  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', overwrite: true},
+  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', upload: -> { !!fetch(:addlogrotate) }, overwrite: true},
   #basic_authenticatable.rb
-  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', overwrite: true},
+  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', upload: -> { !!fetch(:use_basic_auth) }, overwrite: true},
   #nginx.conf
-  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', overwrite: true},
+  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: -> { !!fetch(:addNginx) }, overwrite: true},
   #unicorn.config.rb
-  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', overwrite: true},
-  #secret_token.rb
-  {what: "config/initializers/secret_token.rb", where: '#{release_path}/config/initializers/secret_token.rb', overwrite: true},
+  {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', upload: true, overwrite: true},
   #database.yml
-  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', overwrite: true},
+  {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
   #jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', overwrite: false},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{release_path}/config/newrelic.yml', overwrite: true}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: -> { !!fetch(:addNewRelic) }, overwrite: true}
 ]
 
 set :symlinks, []
@@ -46,7 +44,8 @@ set :std_symlinks, [
   {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
   {what: "application.yml", where: '#{release_path}/config/application.yml'},
-  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'}
+  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'},
+  {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml'}
 ]
 
 before 'deploy', 'rvm1:install:rvm'  # install/update RVM
@@ -71,7 +70,8 @@ namespace :deploy do
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
         what = file_hash[:what]
-        next if !File.exists?(what)
+        next if !file_hash[:upload] || ( file_hash[:upload].is_a?(Proc) && !file_hash[:upload].call )
+        next unless File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
         next if !file_hash[:overwrite] && test("[ -f #{where} ]")
         #compile temlate if it ends with .erb before upload
@@ -146,8 +146,10 @@ namespace :deploy do
 
   desc 'Restart nginx'
   task :restart_nginx do
-    on roles(:app) do
-      execute :sudo, "service nginx reload"
+    if fetch(:addNginx)
+      on roles(:app) do
+        execute :sudo, "service nginx reload"
+      end
     end
   end
 
@@ -170,4 +172,4 @@ after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
-after "deploy:publishing", "unicorn:restart"
+after "deploy:publishing", "unicorn:legacy_restart"
