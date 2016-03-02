@@ -20,21 +20,21 @@ set :std_uploads, [
   #figaro
   {what: "config/application.yml", where: '#{shared_path}/config/application.yml', upload: true, overwrite: true},
   #logstash configs
-  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', upload: !!fetch(:addELK), overwrite: true},
+  {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', upload: fetch(:addELK), overwrite: true},
   #logrotate configs
-  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', upload: !!fetch(:addlogrotate), overwrite: true},
+  {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', upload: fetch(:addlogrotate), overwrite: true},
   #basic_authenticatable.rb
-  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', upload: !!fetch(:use_basic_auth), overwrite: true},
+  {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', upload: fetch(:use_basic_auth), overwrite: true},
   #nginx.conf
-  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: !!fetch(:addnginx), overwrite: true},
+  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: fetch(:addnginx), overwrite: true},
   #unicorn.config.rb
   {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', upload: true, overwrite: true},
   #database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
   #jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: !!fetch(:addJenkins), overwrite: false},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: fetch(:addJenkins), overwrite: false},
   #newrelic.yml
-  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: !!fetch(:addNewRelic), overwrite: true}
+  {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: fetch(:addNewRelic), overwrite: true}
 ]
 
 set :symlinks, []
