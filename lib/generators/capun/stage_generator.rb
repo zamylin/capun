@@ -15,10 +15,8 @@ module Capun
           @username = ask("Basic authentication username [ex.: mike]:")
           @password = ask("Basic authentication password [ex.: secret]:")
         end
+        @addNginx = ask("Would you like to add nginx configuration file? [Y/n]").capitalize == 'Y'
         @addJenkins = ask("Would you like to add Jenkins configuration file? [Y/n]").capitalize == 'Y'
-        if @addJenkins
-            @jenkinsToken = ask("New Jenkins token key:")
-        end
         @addNewRelic = ask("Would you like to add New Relic configuration file? [Y/n]").capitalize == 'Y'
         if @addNewRelic
           @newRelicKey = ask("New relic key:")
@@ -47,6 +45,13 @@ module Capun
           #inject use auth flag into stage
           gsub_file "config/deploy/#{singular_name}.rb", "\nset :use_basic_auth, true", '' if File.exists?("./config/deploy/#{singular_name}.rb")
           append_to_file "config/deploy/#{singular_name}.rb", "\nset :use_basic_auth, true" if File.exists?("./config/deploy/#{singular_name}.rb")
+        end
+      end
+
+      def add_nginx
+        if @addNginx
+          copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addnginx, true"
         end
       end
 
@@ -91,7 +96,8 @@ module Capun
       def add_jenkins
         if @addJenkins
           copy_file "jenkins.config.xml.erb", "config/deploy/jenkins.config.xml.erb"
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addJenkins, true\nset :jenkinsToken, \"#{@jenkinsToken}\""
+          jenkinsToken = Digest::MD5.hexdigest(@appname + Time.now.to_f.to_s)
+          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addJenkins, true\nset :jenkinsToken, \"#{jenkinsToken}\""
         end
       end
 

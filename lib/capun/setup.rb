@@ -144,8 +144,10 @@ namespace :deploy do
 
   desc 'Restart nginx'
   task :restart_nginx do
-    on roles(:app) do
-      execute :sudo, "service nginx reload"
+    if fetch(:addnginx)
+      on roles(:app) do
+        execute :sudo, "service nginx reload"
+      end
     end
   end
 
