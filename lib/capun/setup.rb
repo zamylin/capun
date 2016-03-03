@@ -16,24 +16,25 @@ set :linked_dirs, %w{log tmp/pids tmp/cache tmp/sockets public/system}
 set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 
 set :uploads, []
+# Lambdas are used for lazy access to variables set later, in stage file
 set :std_uploads, [
-  #figaro
+  # figaro
   {what: "config/application.yml", where: '#{shared_path}/config/application.yml', upload: true, overwrite: true},
-  #logstash configs
+  # logstash configs
   {what: "config/deploy/logstash.config.erb", where: '#{shared_path}/config/logstash.config', upload: -> { !!fetch(:addELK) }, overwrite: true},
-  #logrotate configs
+  # logrotate configs
   {what: "config/deploy/logrotate.config.erb", where: '#{shared_path}/config/logrotate.config', upload: -> { !!fetch(:addlogrotate) }, overwrite: true},
-  #basic_authenticatable.rb
+  # basic_authenticatable.rb
   {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', upload: -> { !!fetch(:use_basic_auth) }, overwrite: true},
-  #nginx.conf
+  # nginx.conf
   {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: -> { !!fetch(:addNginx) }, overwrite: true},
-  #unicorn.config.rb
+  # unicorn.config.rb
   {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', upload: true, overwrite: true},
-  #database.yml
+  # database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
-  #jenkins' config.xml
+  # jenkins' config.xml
   {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
-  #newrelic.yml
+  # newrelic.yml
   {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: -> { !!fetch(:addNewRelic) }, overwrite: true}
 ]
 
@@ -57,24 +58,25 @@ namespace :deploy do
   task :kill_me do
     on roles(:app) do
       execute "kill -9 $(ps aux | grep #{fetch(:application)} | grep -v grep | awk '{print $2}') || true"
-    end     
+    end
   end
   before :deploy, 'deploy:kill_me'
 
   desc 'Uploads files to app based on stage'
   task :upload do
     on roles(:app) do |server|
-      #create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
+      # create /home/[user]/apps/[app]/shared/config directory, if it doesn't exist yet
       execute :mkdir, "-p", "#{shared_path}/config"
       execute :sudo, :chown, "-R", "#{fetch(:user)}:#{fetch(:user)}", "#{shared_path}/config/."
       uploads = fetch(:uploads).concat(fetch(:std_uploads))
       uploads.each do |file_hash|
-        what = file_hash[:what]
+        # file_hash[:upload] may be either a boolean or a lambda; in the latter case we use its result
         next if !file_hash[:upload] || ( file_hash[:upload].is_a?(Proc) && !file_hash[:upload].call )
+        what = file_hash[:what]
         next unless File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
         next if !file_hash[:overwrite] && test("[ -f #{where} ]")
-        #compile temlate if it ends with .erb before upload
+        # compile temlate if it ends with .erb before upload
         upload! (what.end_with?(".erb") ? StringIO.new(ERB.new(File.read(what)).result(binding)) : what), where
         info "copying: #{what} to: #{where}"
       end
