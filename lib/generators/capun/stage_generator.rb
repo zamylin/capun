@@ -15,7 +15,6 @@ module Capun
           @username = ask("Basic authentication username [ex.: mike]:")
           @password = ask("Basic authentication password [ex.: secret]:")
         end
-        @addNginx = ask("Would you like to add nginx configuration file? [Y/n]").capitalize == 'Y'
         @addJenkins = ask("Would you like to add Jenkins configuration file? [Y/n]").capitalize == 'Y'
         @addNewRelic = ask("Would you like to add New Relic configuration file? [Y/n]").capitalize == 'Y'
         if @addNewRelic
@@ -49,10 +48,8 @@ module Capun
       end
 
       def add_nginx
-        if @addNginx
-          copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"
-          append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNginx, true"
-        end
+        copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"
+        append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNginx, true"
       end
 
       def add_secret
