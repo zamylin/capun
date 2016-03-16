@@ -47,11 +47,6 @@ module Capun
         end
       end
 
-      def add_nginx
-        copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"
-        append_to_file "config/deploy/#{singular_name}.rb", "\nset :addNginx, true"
-      end
-
       def add_secret
         if File.exists?("config/secrets.yml")
           secret_token_does_not_exist = Thor::CoreExt::HashWithIndifferentAccess.new(::YAML::load_file("config/secrets.yml"))[singular_name].nil?
