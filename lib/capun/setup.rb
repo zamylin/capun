@@ -27,7 +27,7 @@ set :std_uploads, [
   # basic_authenticatable.rb
   {what: "config/deploy/basic_authenticatable.rb.erb", where: '#{release_path}/app/controllers/concerns/basic_authenticatable.rb', upload: -> { !!fetch(:use_basic_auth) }, overwrite: true},
   # nginx.conf
-  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: -> { !!fetch(:addNginx) }, overwrite: true},
+  {what: "config/deploy/nginx.conf.erb", where: '#{shared_path}/config/nginx.conf', upload: true, overwrite: true},
   # unicorn.config.rb
   {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', upload: true, overwrite: true},
   # database.yml
