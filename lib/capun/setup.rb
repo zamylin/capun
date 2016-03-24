@@ -33,20 +33,19 @@ set :std_uploads, [
   # database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
   # jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
   # newrelic.yml
   {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: -> { !!fetch(:addNewRelic) }, overwrite: true}
 ]
 
 set :symlinks, []
 set :std_symlinks, [
-  {what: "nginx.conf", where: '/etc/nginx/sites-enabled/#{fetch(:application)}', overwrite: true},
+  {what: "nginx.conf", where: '/etc/nginx/sites-enabled/#{fetch(:application)}'},
   {what: "logstash.config", where: '/etc/logstash/conf.d/#{fetch(:application)}'},
-  {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}', overwrite: true},
-  {what: "database.yml", where: '#{release_path}/config/database.yml', overwrite: true},
-  {what: "application.yml", where: '#{release_path}/config/application.yml', overwrite: true},
-  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml', overwrite: false},
-  {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml', overwrite: true}
+  {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
+  {what: "database.yml", where: '#{release_path}/config/database.yml'},
+  {what: "application.yml", where: '#{release_path}/config/application.yml'},
+  {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml'}
 ]
 
 before 'deploy', 'rvm1:install:rvm'  # install/update RVM
@@ -76,7 +75,7 @@ namespace :deploy do
         next unless File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
         next if !file_hash[:overwrite] && test("[ -f #{where} ]")
-        # compile temlate if it ends with .erb before upload
+        # compile template if it ends with .erb before upload
         upload! (what.end_with?(".erb") ? StringIO.new(ERB.new(File.read(what)).result(binding)) : what), where
         info "copying: #{what} to: #{where}"
       end
@@ -90,7 +89,6 @@ namespace :deploy do
       fetch(:symlinks).each do |file_hash|
         if test("[ -f #{shared_path}/config/#{file_hash[:what]} ]")
           where = eval "\"" + file_hash[:where] + "\""
-          next if !file_hash[:overwrite] && test("[ -f #{where} ]")
           execute :chmod, "+x #{shared_path}/config/#{file_hash[:what]}"
           info "making #{file_hash[:what]} executable"
           execute :sudo, :ln, "-nfs", "#{shared_path}/config/#{file_hash[:what]} #{where}"
