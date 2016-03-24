@@ -90,7 +90,7 @@ namespace :deploy do
       fetch(:symlinks).each do |file_hash|
         if test("[ -f #{shared_path}/config/#{file_hash[:what]} ]")
           where = eval "\"" + file_hash[:where] + "\""
-          next if! file_hash[:overwrite] && test("[ -f #{where} ]")
+          next if !file_hash[:overwrite] && test("[ -f #{where} ]")
           execute :chmod, "+x #{shared_path}/config/#{file_hash[:what]}"
           info "making #{file_hash[:what]} executable"
           execute :sudo, :ln, "-nfs", "#{shared_path}/config/#{file_hash[:what]} #{where}"
