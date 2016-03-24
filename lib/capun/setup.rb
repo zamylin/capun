@@ -104,7 +104,7 @@ namespace :deploy do
   task :make_dirs do
     on roles(:app) do
       execute :mkdir, "-p", "/home/#{fetch(:user)}/apps/#{fetch(:application)}"
-      if fetch(:addJenkins)
+      if fetch(:addJenkins) && !test("[ -d /var/lib/jenkins/jobs/#{fetch(:application)}/ ]")
         execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
         execute :sudo, :chown, "#{fetch(:user)}", "/var/lib/jenkins/jobs/#{fetch(:application)}"
       end
