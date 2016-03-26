@@ -33,7 +33,7 @@ set :std_uploads, [
   # database.yml
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
   # jenkins' config.xml
-  {what: "config/deploy/jenkins.config.xml.erb", where: '#{shared_path}/config/jenkins.config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
+  {what: "config/deploy/jenkins.config.xml.erb", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
   # newrelic.yml
   {what: "config/deploy/newrelic.yml.erb", where: '#{shared_path}/config/newrelic.yml', upload: -> { !!fetch(:addNewRelic) }, overwrite: true}
 ]
@@ -45,7 +45,6 @@ set :std_symlinks, [
   {what: "logrotate.config", where: '/etc/logrotate.d/#{fetch(:application)}'},
   {what: "database.yml", where: '#{release_path}/config/database.yml'},
   {what: "application.yml", where: '#{release_path}/config/application.yml'},
-  {what: "jenkins.config.xml", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml'},
   {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml'}
 ]
 
@@ -76,7 +75,7 @@ namespace :deploy do
         next unless File.exists?(what)
         where = eval "\"" + file_hash[:where] + "\""
         next if !file_hash[:overwrite] && test("[ -f #{where} ]")
-        # compile temlate if it ends with .erb before upload
+        # compile template if it ends with .erb before upload
         upload! (what.end_with?(".erb") ? StringIO.new(ERB.new(File.read(what)).result(binding)) : what), where
         info "copying: #{what} to: #{where}"
       end
@@ -103,7 +102,7 @@ namespace :deploy do
   task :make_dirs do
     on roles(:app) do
       execute :mkdir, "-p", "/home/#{fetch(:user)}/apps/#{fetch(:application)}"
-      if fetch(:addJenkins)
+      if fetch(:addJenkins) && !test("[ -d /var/lib/jenkins/jobs/#{fetch(:application)}/ ]")
         execute :sudo, :mkdir, "-p", "/var/lib/jenkins/jobs/#{fetch(:application)}"
         execute :sudo, :chown, "#{fetch(:user)}", "/var/lib/jenkins/jobs/#{fetch(:application)}"
       end
