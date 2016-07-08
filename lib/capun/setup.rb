@@ -15,6 +15,8 @@ set :bundle_flags, "--quiet"
 set :linked_dirs, %w{log tmp/pids tmp/cache tmp/sockets public/system}
 set :unicorn_config_path, -> { "#{shared_path}/config/unicorn.config.rb" }
 
+set :install_rvm_ruby, true
+
 set :uploads, []
 # Lambdas are used for lazy access to variables set later, in stage file
 set :std_uploads, [
@@ -48,8 +50,20 @@ set :std_symlinks, [
   {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml'}
 ]
 
-before 'deploy', 'rvm1:install:rvm'  # install/update RVM
-before 'deploy', 'rvm1:install:ruby' # install Ruby and create gemset
+namespace :predeploy do
+  namespace :install do
+    desc 'Install RVM & Ruby'
+    task :rvm_ruby do
+      puts "install_rvm_ruby: #{fetch(:install_rvm_ruby)}"
+      if fetch(:install_rvm_ruby)
+        invoke 'rvm1:install:rvm' # install/update RVM
+        invoke 'rvm1:install:ruby' # install Ruby and create gemset
+      end
+    end
+  end
+end
+
+before 'deploy', 'predeploy:install:rvm_ruby'
 
 namespace :deploy do
 
