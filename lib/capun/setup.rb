@@ -33,6 +33,10 @@ set :std_uploads, [
   # unicorn.config.rb
   {what: "config/deploy/unicorn.config.rb.erb", where: '#{shared_path}/config/unicorn.config.rb', upload: true, overwrite: true},
   # database.yml
+  {what: "config/deploy/backup.sh.erb", where: '#{shared_path}/backup.sh', upload: true, overwrite: true},
+  # backup.sh.erb
+  {what: "config/deploy/drivesink.py", where: '#{shared_path}/drivesink.py', upload: true, overwrite: true},
+  # backup.sh.erb
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
   # jenkins' config.xml
   {what: "config/deploy/jenkins.config.xml.erb", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
@@ -49,6 +53,16 @@ set :std_symlinks, [
   {what: "application.yml", where: '#{release_path}/config/application.yml'},
   {what: "newrelic.yml", where: '#{release_path}/config/newrelic.yml'}
 ]
+namespace :backup do
+  desc 'Backup application'
+  task :exec do
+    on roles(:app) do
+      if fetch(:useBackups)
+          execute "sudo /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/backup.sh"
+      end
+    end
+  end
+end
 
 namespace :predeploy do
   namespace :install do
@@ -67,10 +81,10 @@ before 'deploy', 'predeploy:install:rvm_ruby'
 
 namespace :deploy do
 
-  desc 'Kills running processes'
+  desc 'Kills unicorn processes'
   task :kill_me do
     on roles(:app) do
-      execute "kill -9 $(ps aux | grep #{fetch(:application)} | grep -v grep | awk '{print $2}') || true"
+      execute "cd /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/tmp/pids; for line in $(ls | grep unicorn); do  kill -15 $(sudo cat $line) || true ; done;"
     end
   end
   before :deploy, 'deploy:kill_me'
@@ -175,6 +189,18 @@ namespace :deploy do
     end
   end
 
+  desc 'Update cron backup task'
+  task :update_cron do
+    if fetch(:useBackups)
+      on roles(:app) do
+        execute :chmod, "+x #{shared_path}/backup.sh"
+        info "making backup.sh executable"
+        execute :sudo, :ln, "-nfs", "#{shared_path}/backup.sh /etc/cron.#{fetch(:backupTime)}/backup-#{fetch(:application).gsub(/\./, '-')}"
+        info "Create symbolic link for backup"
+      end
+    end
+  end
+
 end
 
 before "deploy:updating", "deploy:make_dirs"
@@ -185,4 +211,5 @@ after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "deploy:prepare_logrotate"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
+after "deploy:publishing", "deploy:update_cron"
 after "deploy:publishing", "unicorn:legacy_restart"
