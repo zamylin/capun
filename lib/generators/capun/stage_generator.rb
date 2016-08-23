@@ -22,11 +22,13 @@ module Capun
         end
         @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
         @addlogrotate = ask("Would you like to add logrotate configuration to stage? [Y/n]").capitalize == 'Y'
+        @useBackups = ask("Would you like to add amazon backup system? [Y/n]").capitalize == 'Y'
       end
 
       def add_stage
         template "stage.rb.erb", "config/deploy/#{singular_name}.rb"
       end
+
 
       def copy_env_file
         copy_file Rails.root.join('config', 'environments', 'production.rb'), "config/environments/#{singular_name}.rb"
@@ -82,6 +84,19 @@ module Capun
         if @addlogrotate
           copy_file "logrotate.config.erb", "config/deploy/logrotate.config.erb"
           append_to_file "config/deploy/#{singular_name}.rb", "\nset :addlogrotate, true"
+        end
+      end
+
+      def useBackups
+        if @useBackups
+          append_to_file "config/deploy/#{singular_name}.rb", "#backup_system\n" +
+          "set :useBackups, true\n" +
+          "set :backupTime, \"daily\" # available hourly, daily, monthly, weekly\n" +
+          "set :backupFolders, %w{public/system} #recursive\n" +
+          "#set :slack_hook, [hook]\n" +
+          "#set :slack_channel, [channel] #must be specified"
+          copy_file "backup.sh.erb", "config/deploy/backup.sh.erb"
+          copy_file "drivesink.py", "config/deploy/drivesink.py"
         end
       end
 
