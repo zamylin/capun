@@ -4,7 +4,7 @@ cd /home/<%= fetch(:user) %>/apps/<%= fetch(:application) %>/shared
 curdate=$(date +"%m-%d-%y")
 mkdir -p "backuping/version-$curdate"
 
-zip -u -0 -r -s 1000 "backuping/version-$curdate/assets.zip" <% fetch(:backupFolders).each do |folder|%> <%= folder + ' ' %> <% end %>
+zip -u -0 -r -s 1000 "backuping/version-$curdate/assets.zip" <% (fetch(:backupFolders) || []).each do |folder|%> <%= folder + ' ' %> <% end %>
 
 adapter=$(cat config/database.yml | grep adapter | sed s/adapter://g | xargs)
 if [ "$adapter" = "sqlite3" ]; then
@@ -24,7 +24,9 @@ python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "b
 if [ $? -eq 0 ]; then
 SIZE=$(du -sh backuping | awk '{print $1}')
 curl -X POST -H 'Content-type: application/json' \
---data "{'attachments': [{'mrkdwn_in': ['text'],'text': 'Успешо создан бэкап для *<%= fetch(:application) %>*\n<% fetch(:backupFolders).each do |folder|%><%= "-" +folder + '\n' %><% end %>Тип базы данных: *$DATA_BASE_TYPE*\nРазмер *$SIZE*','color': '#3AA3E3', 'title': 'Amazon Backup System'}]<%=", \'channel\': \'#{fetch(:slack_channel)}\' " if !fetch(:slack_channel).nil? %>}" \
+
+--data "{'attachments': [{'mrkdwn_in': ['text'],'text': 'Успешо создан бэкап для *<%= fetch(:application) %>*\n<% (fetch(:backupFolders) || []).each do |folder|%><%= "-" +folder + '\n' %><% end %>Тип базы данных: *$DATA_BASE_TYPE*\nРазмер *$SIZE*','color': '#3AA3E3', 'title': 'Amazon Backup System'}]<%=", \'channel\': \'#{fetch(:slack_channel)}\' " if !fetch(:slack_channel).nil? %>}" \
+
 <%= fetch(:slack_hook) %>
 else
 curl -X POST -H 'Content-type: application/json' \
