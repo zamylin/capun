@@ -15,6 +15,7 @@ module Capun
 
       def copy_files
         empty_directory "config/deploy"
+        copy_file "start.erb", "config/deploy/start.erb"
         copy_file "database.yml.erb", "config/deploy/database.yml.erb"
         copy_file "unicorn.config.rb.erb", "config/deploy/unicorn.config.rb.erb"
         copy_file "nginx.conf.erb", "config/deploy/nginx.conf.erb"

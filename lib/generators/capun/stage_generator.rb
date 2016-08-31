@@ -23,6 +23,9 @@ module Capun
         @addELK = ask("Would you like to add ELK-compatible logging? [Y/n]").capitalize == 'Y'
         @addlogrotate = ask("Would you like to add logrotate configuration to stage? [Y/n]").capitalize == 'Y'
         @useBackups = ask("Would you like to add amazon backup system? [Y/n]").capitalize == 'Y'
+        @addDelayedJob = ask("Would you like to add delayed job worker? [Y/n]").capitalize == 'Y'
+        @addClockwork = ask("Would you like to add clockwork worker? [Y/n]").capitalize == 'Y'
+        @autorestart = ask("Would you like to start application after server restart? [Y/n]").capitalize == 'Y'
       end
 
       def add_stage
@@ -100,6 +103,26 @@ module Capun
         end
       end
 
+      def addDelayedJob
+        if @addDelayedJob
+          append_to_file "config/deploy.rb","set :delayed_job, true\n"
+          append_to_file "Gemfile","gem 'delayed_job'\n"
+          append_to_file "Gemfile","gem 'delayed_job_active_record'\n"
+          append_to_file "Gemfile","gem 'capistrano3-delayed-job', '~> 1.0'\n"
+        end
+      end
+      def addClockwork
+        if @addClockwork
+          append_to_file "config/deploy.rb","set :clockwork, true\n"
+          append_to_file "Gemfile","gem 'clockwork'\n"
+          append_to_file "Gemfile","gem 'capistrano-clockwork'\n"
+        end
+      end
+      def addAutorestart
+        if @autorestart
+          append_to_file "config/deploy/#{singular_name}.rb", "set :autorestart, true\n"
+        end
+      end
       def add_jenkins
         if @addJenkins
           copy_file "jenkins.config.xml.erb", "config/deploy/jenkins.config.xml.erb"

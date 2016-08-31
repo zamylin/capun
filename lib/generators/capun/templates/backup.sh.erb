@@ -19,7 +19,17 @@ database=$(cat config/database.yml | grep database | sed s/database://g | xargs)
 mysqldump --user="$username" --password="$password" $database > "backuping/version-$curdate/<%=fetch(:stage)%>.sql"
 fi
 
-python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %>
+COUNTER=5
+until [  $COUNTER -lt 1 ]; do
+    echo COUNTER $COUNTER
+    let COUNTER-=1
+    python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> >> log/backup.log
+    if [ $? -eq 0 ]; then
+      let COUNTER=0
+    else
+      let COUNTER-=1
+    fi
+done
 
 if [ $? -eq 0 ]; then
 SIZE=$(du -sh backuping | awk '{print $1}')
