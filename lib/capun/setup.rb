@@ -38,6 +38,8 @@ set :std_uploads, [
   {what: "config/deploy/drivesink.py", where: '#{shared_path}/drivesink.py', upload: true, overwrite: true},
   # backup.sh.erb
   {what: "config/deploy/database.yml.erb", where: '#{shared_path}/config/database.yml', upload: true, overwrite: true},
+  # restart script
+  {what: "config/deploy/start.erb", where: '#{release_path}/bin/start', upload: true, overwrite: true},
   # jenkins' config.xml
   {what: "config/deploy/jenkins.config.xml.erb", where: '/var/lib/jenkins/jobs/#{fetch(:application)}/config.xml', upload: -> { !!fetch(:addJenkins) }, overwrite: false},
   # newrelic.yml
@@ -63,6 +65,16 @@ namespace :backup do
     end
   end
 end
+
+desc "Start server"
+task :start do
+  invoke 'deploy:kill_me'
+  invoke 'unicorn:start'
+  invoke 'delayed_job:restart' if fetch(:delayed_job)
+  invoke 'clockwork:restart' if fetch(:clockwork)
+end
+
+
 
 namespace :predeploy do
   namespace :install do
@@ -201,6 +213,17 @@ namespace :deploy do
     end
   end
 
+  desc 'Setting up autorestart'
+  task :autorestart do
+    if fetch(:autorestart)
+      on roles(:app) do
+        execute :chmod, "+x #{release_path}/bin/start"
+        info "making start executable"
+        execute :sudo, :ln, "-nfs", "#{release_path}/bin/start /etc/init.d/autorestart-#{fetch(:application).gsub(/\./, '-')}"
+        info "Create symbolic link for autorestart"
+      end
+    end
+  end
 end
 
 before "deploy:updating", "deploy:make_dirs"
@@ -209,6 +232,7 @@ after "deploy:symlink:linked_dirs", "deploy:upload"
 after "deploy:symlink:linked_dirs", "deploy:add_symlinks"
 after "deploy:publishing", "deploy:set_up_jenkins"
 after "deploy:publishing", "deploy:prepare_logrotate"
+after "deploy:publishing", "deploy:autorestart"
 after "deploy:publishing", "deploy:restart_nginx"
 after "deploy:publishing", "deploy:restart_logstash"
 after "deploy:publishing", "deploy:update_cron"
