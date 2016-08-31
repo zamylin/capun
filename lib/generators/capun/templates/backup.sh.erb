@@ -21,13 +21,11 @@ fi
 
 COUNTER=5
 until [  $COUNTER -lt 1 ]; do
-    echo COUNTER $COUNTER
-    let COUNTER-=1
-    python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> >> log/backup.log
+    python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> >> log/backup.log 2>&1
     if [ $? -eq 0 ]; then
-      let COUNTER=0
+      COUNTER=0
     else
-      let COUNTER-=1
+      COUNTER=$($COUNTER -1)
     fi
 done
 
