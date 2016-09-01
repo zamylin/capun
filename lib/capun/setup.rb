@@ -69,7 +69,7 @@ end
 desc "Start server"
 task :start do
   invoke 'deploy:kill_me'
-  invoke 'unicorn:start'
+  invoke 'unicorn:restart'
   invoke 'delayed_job:restart' if fetch(:delayed_job)
   invoke 'clockwork:restart' if fetch(:clockwork)
 end
@@ -97,6 +97,7 @@ namespace :deploy do
   task :kill_me do
     on roles(:app) do
       execute "cd /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/tmp/pids; for line in $(ls | grep unicorn); do  kill -15 $(sudo cat $line) || true ; done;"
+      execute "sleep 3"
     end
   end
   before :deploy, 'deploy:kill_me'
@@ -219,7 +220,7 @@ namespace :deploy do
       on roles(:app) do
         execute :chmod, "+x #{release_path}/bin/start"
         info "making start executable"
-        execute :sudo, :ln, "-nfs", "#{release_path}/bin/start /etc/init.d/autorestart-#{fetch(:application).gsub(/\./, '-')}"
+        execute :sudo, :ln, "-nfs", "#{release_path}/bin/start /etc/autostart/autorestart-#{fetch(:application).gsub(/\./, '-')}"
         info "Create symbolic link for autorestart"
       end
     end
