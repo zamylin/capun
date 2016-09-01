@@ -219,7 +219,7 @@ namespace :deploy do
       on roles(:app) do
         execute :chmod, "+x #{release_path}/bin/start"
         info "making start executable"
-        execute :sudo, :ln, "-nfs", "#{release_path}/bin/start /etc/init.d/autorestart-#{fetch(:application).gsub(/\./, '-')}"
+        execute :sudo, :ln, "-nfs", "#{release_path}/bin/start /etc/autostart/autorestart-#{fetch(:application).gsub(/\./, '-')}"
         info "Create symbolic link for autorestart"
       end
     end
