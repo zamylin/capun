@@ -97,7 +97,9 @@ module Capun
           "set :backupTime, \"daily\" # available hourly, daily, monthly, weekly\n" +
           "set :backupFolders, %w{public/system} #recursive\n" +
           "#set :slack_hook, [hook]\n" +
-          "#set :slack_channel, [channel] #must be specified"
+          "#set :slack_channel, [channel] #must be specified"+
+          "#set :backup_telegram_bot_hash, [channel] #must be specified"+
+          "#set :bachup_telegram_chat_id, [channel] #must be specified"
           copy_file "backup.sh.erb", "config/deploy/backup.sh.erb"
           copy_file "drivesink.py", "config/deploy/drivesink.py"
         end

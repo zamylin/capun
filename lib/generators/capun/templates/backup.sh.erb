@@ -1,5 +1,8 @@
 #!/bin/bash
 
+has_error=0
+error_text="";
+
 cd /home/<%= fetch(:user) %>/apps/<%= fetch(:application) %>/shared
 curdate=$(date +"%m-%d-%y")
 mkdir -p "backuping/version-$curdate"
@@ -16,28 +19,69 @@ DATA_BASE_TYPE="<%=fetch(:stage)%>.sql"
 username=$(cat config/database.yml | grep username | sed s/username://g | xargs)
 password=$(cat config/database.yml | grep password | sed s/password://g | xargs)
 database=$(cat config/database.yml | grep database | sed s/database://g | xargs)
+{
 mysqldump --user="$username" --password="$password" $database > "backuping/version-$curdate/<%=fetch(:stage)%>.sql"
+} || {
+	has_error=1
+	error_text="Ошибка во время выполнения дампа mysql"
+}
+fi
+
+
+if [ "$adapter" = "postgresql" ]; then
+DATA_BASE_TYPE="<%=fetch(:stage)%>.sql"
+username=$(cat config/database.yml | grep username | sed s/username://g | xargs)
+password=$(cat config/database.yml | grep password | sed s/password://g | xargs)
+database=$(cat config/database.yml | grep database | sed s/database://g | xargs)
+
+if grep "localhost:5432:$database:$username:$password" /home/kobe/.pgpass; then 
+      
+else 
+   echo "localhost:5432:$database:$username:$password" >> /home/kobe/.pgpass;  
+fi
+
+{
+	pg_dump -h localhost -U $username -d $database -f backuping/version-$curdate/<%=fetch(:stage)%>.sql
+} || {
+	has_error=1
+	error_text="Ошибка во время выполнения дампа pg"
+}
 fi
 
 COUNTER=5
+
+
 until [  $COUNTER -lt 1 ]; do
-    python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> >> log/backup.log 2>&1
+    {#try
+    python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> -c /home/kobe/.drivesink #>> log/backup.log 2>&1
+    } || {  #catch
+    	has_error=1;
+    	error_text="Ошибка во время исполнения скрипта загрузки файлов в хранилище";
+    }
     if [ $? -eq 0 ]; then
       COUNTER=0
     else
-      COUNTER=$($COUNTER -1)
+      COUNTER=$[$COUNTER -1]
     fi
 done
 
-if [ $? -eq 0 ]; then
+if ([ $? -eq 0 ] && [ "$has_error" == 0 ]); then
 SIZE=$(du -sh backuping | awk '{print $1}')
 curl -X POST -H 'Content-type: application/json' \
 --data "{'attachments': [{'mrkdwn_in': ['text'],'text': 'Успешо создан бэкап для *<%= fetch(:application) %>*\n<% (fetch(:backupFolders) || []).each do |folder|%><%= "- " +folder + '\n' %><% end %>- $DATA_BASE_TYPE\nРазмер *$SIZE*','color': '#3AA3E3', 'title': 'Amazon Backup System'}]<%=", \'channel\': \'#{fetch(:slack_channel)}\' " if !fetch(:slack_channel).nil? %>}" \
 <%= fetch(:slack_hook) %>
+
+#telegram notification
+curl -i -X GET "https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=Успешо создан бэкап для <%= fetch(:application) %>"
+
 else
 curl -X POST -H 'Content-type: application/json' \
 --data "{'attachments': [{'mrkdwn_in': ['text'],'text': 'Произошла ошибка при создании бэкапа для *<%= fetch(:application) %>','color': '#FF0000', 'title': 'Amazon Backup System'}]<%=", \'channel\': \'#{fetch(:slack_channel)}\' " if !fetch(:slack_channel).nil? %>}" \
 <%= fetch(:slack_hook) %>
+
+#telegram notification
+curl -i -X GET "https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=Произошла ошибка при создании бэкапа для <%= fetch(:application) %>"
+
 fi
 
-rm -rf backuping
+sudo rm -rf backuping
