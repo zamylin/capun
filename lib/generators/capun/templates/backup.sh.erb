@@ -22,8 +22,8 @@ database=$(cat config/database.yml | grep database | sed s/database://g | xargs)
 {
 mysqldump --user="$username" --password="$password" $database > "backuping/version-$curdate/<%=fetch(:stage)%>.sql"
 } || {
-	has_error=1
-	error_text="Ошибка во время выполнения дампа mysql"
+  has_error=1
+  error_text="Mysql dump error"
 }
 fi
 
@@ -34,17 +34,18 @@ username=$(cat config/database.yml | grep username | sed s/username://g | xargs)
 password=$(cat config/database.yml | grep password | sed s/password://g | xargs)
 database=$(cat config/database.yml | grep database | sed s/database://g | xargs)
 
-if grep "localhost:5432:$database:$username:$password" /home/kobe/.pgpass; then 
-      
+if grep "localhost:5432:$database:$username:$password" ~/.pgpass; then 
+   echo "pg config exists"     
 else 
-   echo "localhost:5432:$database:$username:$password" >> /home/kobe/.pgpass;  
+   echo "localhost:5432:$database:$username:$password" >> ~/.pgpass;  
+   chmod 600 ~/.pgpass
 fi
 
 {
-	pg_dump -h localhost -U $username -d $database -f backuping/version-$curdate/<%=fetch(:stage)%>.sql
+  pg_dump -h localhost -U $username -d $database -f backuping/version-$curdate/<%=fetch(:stage)%>.sql
 } || {
-	has_error=1
-	error_text="Ошибка во время выполнения дампа pg"
+  has_error=1
+  error_text="PG dump error"
 }
 fi
 
@@ -52,11 +53,11 @@ COUNTER=5
 
 
 until [  $COUNTER -lt 1 ]; do
-    {#try
+    { #try
     python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> -c /home/kobe/.drivesink #>> log/backup.log 2>&1
-    } || {  #catch
-    	has_error=1;
-    	error_text="Ошибка во время исполнения скрипта загрузки файлов в хранилище";
+    } || { 
+      has_error=1;
+      error_text="Cannot upload files";
     }
     if [ $? -eq 0 ]; then
       COUNTER=0
@@ -72,7 +73,7 @@ curl -X POST -H 'Content-type: application/json' \
 <%= fetch(:slack_hook) %>
 
 #telegram notification
-curl -i -X GET "https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=Успешо создан бэкап для <%= fetch(:application) %>"
+curl -i -X GET ""https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=✅ Бекап для <%= fetch(:application) %>"
 
 else
 curl -X POST -H 'Content-type: application/json' \
@@ -80,7 +81,7 @@ curl -X POST -H 'Content-type: application/json' \
 <%= fetch(:slack_hook) %>
 
 #telegram notification
-curl -i -X GET "https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=Произошла ошибка при создании бэкапа для <%= fetch(:application) %>"
+curl -i -X GET "https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=🚫  Бекап для <%= fetch(:application) %> \[Error: $error_text\]"
 
 fi
 
