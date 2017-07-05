@@ -53,12 +53,12 @@ COUNTER=5
 
 
 until [  $COUNTER -lt 1 ]; do
-    { #try
+    #{ #try
     python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> -c /home/kobe/.drivesink #>> log/backup.log 2>&1
-    } || { 
-      has_error=1;
-      error_text="Cannot upload files";
-    }
+    #} || { 
+    #  has_error=1;
+    #  error_text="Cannot upload files";
+    #}
     if [ $? -eq 0 ]; then
       COUNTER=0
     else
