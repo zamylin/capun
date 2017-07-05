@@ -53,12 +53,12 @@ COUNTER=5
 
 
 until [  $COUNTER -lt 1 ]; do
-    { #try
+    #{ #try
     python drivesink.py upload "backuping" <%= fetch(:backupDestinationFolder) || "backups/firstdedic-server/" + fetch(:application)  %> -c /home/kobe/.drivesink #>> log/backup.log 2>&1
-    } || { 
-      has_error=1;
-      error_text="Cannot upload files";
-    }
+    #} || { 
+    #  has_error=1;
+    #  error_text="Cannot upload files";
+    #}
     if [ $? -eq 0 ]; then
       COUNTER=0
     else
@@ -73,7 +73,7 @@ curl -X POST -H 'Content-type: application/json' \
 <%= fetch(:slack_hook) %>
 
 #telegram notification
-curl -i -X GET "https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=✅ Бекап для <%= fetch(:application) %>"
+curl -i -X GET ""https://api.telegram.org/bot<%= fetch(:backup_telegram_bot_hash) %>/sendMessage?chat_id=<%= fetch(:backup_telegram_chat_id) %>&text=✅ Бекап для <%= fetch(:application) %>"
 
 else
 curl -X POST -H 'Content-type: application/json' \
